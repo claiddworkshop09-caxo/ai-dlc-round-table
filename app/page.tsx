@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -40,9 +40,7 @@ export default async function Page() {
             QR コードで備品の貸出・返却を管理できます
           </p>
         </div>
-        <Button asChild>
-          <Link href="/items">備品一覧を見る</Link>
-        </Button>
+        <Link href="/items" className={buttonVariants()}>備品一覧を見る</Link>
       </div>
 
       <Card>
