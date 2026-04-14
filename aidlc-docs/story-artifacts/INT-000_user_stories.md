@@ -1,8 +1,9 @@
 # INT-000 User Stories
 
-This file is a list of User Stories for INT-000.
+INT-000 備品貸出管理アプリのユーザーストーリー一覧。
 
-- US-001: (Title)
-- US-002: (Title)
-- US-003: (Title)
-
+- US-001: 備品を登録して QR コードを発行する
+- US-002: QR コードをスキャンして備品を借りる
+- US-003: QR コードをスキャンして備品を返却する
+- US-004: 貸出中の備品一覧を確認する
+- US-005: 利用者を事前登録・管理する

@@ -1,5 +1,4 @@
-import { revalidatePath } from "next/cache";
-import { desc } from "drizzle-orm";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,91 +7,81 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { comments } from "@/src/schema";
-
 export const dynamic = "force-dynamic";
 
-async function getComments() {
+async function getActiveLoans() {
   const { db } = await import("@/src/db");
-  return db.select().from(comments).orderBy(desc(comments.createdAt));
+  const { loans, items, appUsers } = await import("@/src/schema");
+  const { eq, isNull } = await import("drizzle-orm");
+
+  return db
+    .select({
+      loanId: loans.id,
+      itemName: items.name,
+      userName: appUsers.name,
+      borrowedAt: loans.borrowedAt,
+    })
+    .from(loans)
+    .innerJoin(items, eq(loans.itemId, items.id))
+    .innerJoin(appUsers, eq(loans.userId, appUsers.id))
+    .where(isNull(loans.returnedAt))
+    .orderBy(loans.borrowedAt);
 }
 
 export default async function Page() {
-  const list = await getComments();
-
-  async function create(formData: FormData) {
-    "use server";
-    const { db } = await import("@/src/db");
-    const comment = formData.get("comment");
-    if (typeof comment !== "string" || comment.trim() === "") {
-      return;
-    }
-    await db.insert(comments).values({ comment });
-    revalidatePath("/");
-  }
+  const activeLoans = await getActiveLoans();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-muted/40 px-4 py-16">
-      <Card className="w-full max-w-md shadow-md">
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">備品管理アプリ</h1>
+          <p className="text-muted-foreground mt-1">
+            QR コードで備品の貸出・返却を管理できます
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/items">備品一覧を見る</Link>
+        </Button>
+      </div>
+
+      <Card>
         <CardHeader>
-          <CardTitle>Comments</CardTitle>
+          <CardTitle>貸出中の備品</CardTitle>
           <CardDescription>
-            コメントを入力して送信すると、一覧に反映されます。
+            現在貸出中の備品一覧です
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <form action={create} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="comment">コメント</Label>
-              <Input
-                id="comment"
-                name="comment"
-                type="text"
-                placeholder="write a comment"
-                required
-                autoComplete="off"
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Submit
-            </Button>
-          </form>
-
-          <Separator />
-
-          <section aria-labelledby="comments-heading">
-            <h2
-              id="comments-heading"
-              className="mb-3 text-sm font-medium text-muted-foreground"
-            >
-              登録済み（新しい順）
-            </h2>
-            {list.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                まだコメントはありません。
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {list.map((row) => (
-                  <li
-                    key={row.id}
-                    className="rounded-lg border border-border bg-muted/50 px-3 py-2.5"
-                  >
-                    <p className="text-sm text-foreground">{row.comment}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {row.createdAt.toLocaleString("ja-JP", {
+        <CardContent>
+          {activeLoans.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              現在貸出中の備品はありません。
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {activeLoans.map((loan) => (
+                <li
+                  key={loan.loanId}
+                  className="rounded-lg border border-border bg-muted/50 px-4 py-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{loan.itemName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        借りた人: {loan.userName}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {loan.borrowedAt.toLocaleString("ja-JP", {
                         dateStyle: "short",
                         timeStyle: "short",
                       })}
                     </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,0 +1,25 @@
+CREATE TABLE "items" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"description" text,
+	"quantity" integer DEFAULT 1 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "app_users" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "loans" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"item_id" integer NOT NULL,
+	"user_id" integer NOT NULL,
+	"borrowed_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"returned_at" timestamp with time zone
+);
+--> statement-breakpoint
+ALTER TABLE "loans" ADD CONSTRAINT "loans_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "loans" ADD CONSTRAINT "loans_user_id_app_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."app_users"("id") ON DELETE no action ON UPDATE no action;
