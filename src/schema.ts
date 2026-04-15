@@ -46,3 +46,33 @@ export const tasks = pgTable("tasks", {
     .defaultNow()
     .notNull(),
 });
+
+// 備品テーブル
+export const equipment = pgTable("equipment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  modelNumber: text("model_number"),
+  description: text("description"),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// 貸し出し記録テーブル
+export const equipmentLoans = pgTable("equipment_loans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  equipmentId: uuid("equipment_id")
+    .notNull()
+    .references(() => equipment.id, { onDelete: "cascade" }),
+  borrowerName: text("borrower_name").notNull(),
+  loanedAt: timestamp("loaned_at", { mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  returnedAt: timestamp("returned_at", { mode: "date", withTimezone: true }),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

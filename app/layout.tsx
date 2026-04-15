@@ -48,6 +48,12 @@ export default function RootLayout({
               >
                 タスク
               </Link>
+              <Link
+                href="/equipment"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                備品管理
+              </Link>
             </div>
           </nav>
         </header>
