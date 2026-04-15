@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { eq, desc, isNull } from "drizzle-orm"
+import { and, eq, desc, isNull } from "drizzle-orm"
 import { ArrowLeftIcon, QrCodeIcon } from "lucide-react"
 import { db } from "@/src/db"
 import { equipment, equipmentLoans } from "@/src/schema"
@@ -33,8 +33,7 @@ export default async function EquipmentDetailPage({
     db
       .select()
       .from(equipmentLoans)
-      .where(eq(equipmentLoans.equipmentId, id))
-      .where(isNull(equipmentLoans.returnedAt)),
+      .where(and(eq(equipmentLoans.equipmentId, id), isNull(equipmentLoans.returnedAt))),
   ])
 
   const loanUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/equipment/${id}/loan`

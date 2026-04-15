@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { eq, isNull } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { db } from "@/src/db"
 import { equipment, equipmentLoans } from "@/src/schema"
 import { LoanClient } from "./_components/LoanClient"
@@ -23,8 +23,7 @@ export default async function LoanPage({
   const [activeLoan] = await db
     .select()
     .from(equipmentLoans)
-    .where(eq(equipmentLoans.equipmentId, id))
-    .where(isNull(equipmentLoans.returnedAt))
+    .where(and(eq(equipmentLoans.equipmentId, id), isNull(equipmentLoans.returnedAt)))
 
   return (
     <LoanClient

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/src/db";
 import { equipment, equipmentLoans } from "@/src/schema";
 
@@ -32,8 +32,7 @@ export async function POST(
   const [activeLoan] = await db
     .select()
     .from(equipmentLoans)
-    .where(eq(equipmentLoans.equipmentId, id))
-    .where(isNull(equipmentLoans.returnedAt));
+    .where(and(eq(equipmentLoans.equipmentId, id), isNull(equipmentLoans.returnedAt)));
 
   if (activeLoan) {
     return NextResponse.json(
