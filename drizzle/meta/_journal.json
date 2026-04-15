@@ -19,8 +19,8 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1744963200000,
-      "tag": "0002_add_items_users_loans",
+      "when": 1775800000000,
+      "tag": "0002_add_projects_tasks",
       "breakpoints": true
     }
   ]

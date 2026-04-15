@@ -2,11 +2,12 @@ import {
   pgTable,
   serial,
   text,
-  integer,
   timestamp,
+  uuid,
+  boolean,
+  date,
 } from "drizzle-orm/pg-core";
 
-// 既存テーブル（サンプル用、削除しない）
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   comment: text("comment").notNull(),
@@ -15,37 +16,33 @@ export const comments = pgTable("comments", {
     .notNull(),
 });
 
-// 備品テーブル
-export const items = pgTable("items", {
-  id: serial("id").primaryKey(),
+// プロジェクトテーブル
+export const projects = pgTable("projects", {
+  id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   description: text("description"),
-  quantity: integer("quantity").default(1).notNull(),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
     .defaultNow()
     .notNull(),
 });
 
-// 利用者テーブル
-export const appUsers = pgTable("app_users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+// タスクテーブル
+export const tasks = pgTable("tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("todo"), // 'todo' | 'in_progress' | 'done'
+  priority: text("priority").notNull().default("medium"), // 'high' | 'medium' | 'low'
+  dueDate: date("due_date"),
+  completed: boolean("completed").notNull().default(false),
+  projectId: uuid("project_id").references(() => projects.id),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
     .defaultNow()
     .notNull(),
-});
-
-// 貸出記録テーブル
-export const loans = pgTable("loans", {
-  id: serial("id").primaryKey(),
-  itemId: integer("item_id")
-    .notNull()
-    .references(() => items.id),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => appUsers.id),
-  borrowedAt: timestamp("borrowed_at", { mode: "date", withTimezone: true })
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
     .defaultNow()
     .notNull(),
-  returnedAt: timestamp("returned_at", { mode: "date", withTimezone: true }),
 });

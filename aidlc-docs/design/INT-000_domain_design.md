@@ -1,57 +1,102 @@
 # INT-000 Domain Design
 
-## ドメインコンセプト
+## ドメイン概要
+タスク・プロジェクト管理と備品QR管理の2つのサブドメインで構成される。
 
-備品の貸出・返却を QR コードで管理するシステム。
-管理者が備品と利用者を事前登録し、利用者がスマホで QR コードをスキャンして貸出・返却を記録する。
+---
 
-## 用語定義
+## サブドメイン 1: タスク・プロジェクト管理
 
-| 用語 | 説明 |
+### 用語定義
+
+| 用語 | 定義 |
 |------|------|
-| 備品 (Item) | 貸出対象となる物品。名称・説明・数量を持つ |
-| 利用者 (User) | 備品を借りる人。事前に管理者が登録する |
-| 貸出記録 (Loan) | 誰がいつどの備品を借りたか・返したかの記録 |
-| QR コード | 備品詳細ページの URL を埋め込んだ 2 次元バーコード |
+| タスク (Task) | チームが実施すべき作業の最小単位。タイトル・説明・優先度・締め切り日・ステータスを持つ |
+| プロジェクト (Project) | 複数のタスクをグループ化する単位。名前・説明を持つ |
+| ステータス (Status) | タスクの進行状態。「To Do」「In Progress」「Done」の3値 |
+| 優先度 (Priority) | タスクの重要度。「高(high)」「中(medium)」「低(low)」の3値 |
+| 締め切り日 (Due Date) | タスクを完了すべき期限日 |
+| 完了チェック (Completed) | タスクが完了したかどうかを示すフラグ |
 
-## 主要エンティティ
-
-### 備品 (Item)
-- id: 一意識別子
-- name: 備品名（必須）
-- description: 説明（任意）
-- quantity: 数量（デフォルト 1）
-- createdAt: 登録日時
-
-ビジネスルール:
-- 各備品に一意の QR コードが割り当てられる
-- QR コードは `/items/{id}` の URL を指す
-
-### 利用者 (AppUser)
-- id: 一意識別子
-- name: 利用者名（必須）
-- createdAt: 登録日時
-
-ビジネスルール:
-- 貸出時はドロップダウンから登録済み利用者を選択する（名前の手入力不可）
-
-### 貸出記録 (Loan)
-- id: 一意識別子
-- itemId: 貸出備品の ID（FK → items）
-- userId: 借りた利用者の ID（FK → app_users）
-- borrowedAt: 貸出日時（必須）
-- returnedAt: 返却日時（NULL = 貸出中）
-
-ビジネスルール:
-- 同一備品に対して returnedAt が NULL の記録が存在する場合は貸出中
-- 返却時は returnedAt に現在日時を設定する
-
-## エンティティ関連
+### 主要エンティティ
 
 ```
-Item 1 --- * Loan * --- 1 AppUser
+Project（プロジェクト）
+  - id: UUID (PK)
+  - name: string (必須)
+  - description: string (任意)
+  - created_at: datetime
+  - updated_at: datetime
+
+Task（タスク）
+  - id: UUID (PK)
+  - title: string (必須)
+  - description: string (任意)
+  - status: enum('todo', 'in_progress', 'done')
+  - priority: enum('high', 'medium', 'low')
+  - due_date: date (任意)
+  - completed: boolean
+  - project_id: UUID (FK -> Project, 任意)
+  - created_at: datetime
+  - updated_at: datetime
 ```
 
-- 1 つの備品に複数の貸出記録が存在する
-- 1 人の利用者が複数の貸出記録を持てる
-- 1 つの貸出記録は 1 つの備品・1 人の利用者に紐づく
+### エンティティ関係
+```
+Project 1 --- 0..* Task
+（1つのプロジェクトに複数のタスクが属する。タスクはプロジェクトなしでも存在可能）
+```
+
+---
+
+## サブドメイン 2: 備品QR管理
+
+### 用語定義
+
+| 用語 | 定義 |
+|------|------|
+| 備品 (Equipment) | 管理対象のPC・機材等の物品。名前・型番を持つ |
+| 貸し出し記録 (EquipmentLoan) | 備品の貸し出し・返却の履歴。借用者名・貸し出し日時・返却日時を持つ |
+| 貸出中 (On Loan) | 備品が現在貸し出されている状態（返却日時がnull） |
+| 返却済 (Returned) | 備品が返却された状態（返却日時が記録されている） |
+| QRコード | 備品IDを埋め込んだQRコード。スキャンで貸し出し/返却画面にアクセスする |
+| 借用者 (Borrower) | 備品を借りた人の名前（認証なしのため自己申告） |
+
+### 主要エンティティ
+
+```
+Equipment（備品）
+  - id: UUID (PK)
+  - name: string (必須)
+  - model_number: string (任意)
+  - description: string (任意)
+  - created_at: datetime
+  - updated_at: datetime
+
+EquipmentLoan（貸し出し記録）
+  - id: UUID (PK)
+  - equipment_id: UUID (FK -> Equipment)
+  - borrower_name: string (必須)
+  - loaned_at: datetime (貸し出し日時)
+  - returned_at: datetime (返却日時、null=貸出中)
+  - created_at: datetime
+```
+
+### エンティティ関係
+```
+Equipment 1 --- 0..* EquipmentLoan
+（1つの備品に複数の貸し出し履歴が存在する。同時貸し出しは1件のみ）
+```
+
+---
+
+## ドメイン境界まとめ
+
+```
+[既存: コメントドメイン]      [タスク・プロジェクトドメイン]      [備品QRドメイン]
+  Comment                    Project <-- Task                   Equipment <-- EquipmentLoan
+  (変更なし)                                                     (QRコードでアクセス)
+```
+
+## 作成日
+2026-04-15

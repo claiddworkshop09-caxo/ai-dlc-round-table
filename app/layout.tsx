@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "備品管理アプリ",
-  description: "QR コードで備品の貸出・返却を管理するアプリ",
+  title: "タスク管理",
+  description: "Neon + Drizzle タスク管理ツール",
 };
 
 export default function RootLayout({
@@ -29,26 +29,29 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="border-b bg-background">
-          <nav className="mx-auto max-w-4xl flex items-center gap-6 px-4 py-3">
-            <Link href="/" className="font-bold text-lg">
-              備品管理
-            </Link>
-            <Link
-              href="/items"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              備品一覧
-            </Link>
-            <Link
-              href="/users"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              利用者管理
-            </Link>
+        {/* ヘッダーナビゲーション */}
+        <header className="sticky top-0 z-40 border-b bg-card">
+          <nav className="mx-auto flex h-12 max-w-4xl items-center gap-6 px-4">
+            <span className="text-sm font-semibold text-foreground">
+              タスク管理ツール
+            </span>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                コメント
+              </Link>
+              <Link
+                href="/tasks"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                タスク
+              </Link>
+            </div>
           </nav>
         </header>
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 flex flex-col">{children}</main>
       </body>
     </html>
   );
